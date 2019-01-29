@@ -25,6 +25,7 @@ def get_month_target_folder(month: Month) -> Path:
 
 
 def sync_folder(source: Path, target: Path, record_filter=None):
+    target = target.expanduser()
     target.mkdir(exist_ok=True, parents=True)
     directories_to_sync: List[FileRecord] = []
     for file in adb.list_dir(source):
@@ -74,7 +75,7 @@ def sync_by_month() -> None:
 
 def sync_folder_prompt():
     source = Path(input('From: '))
-    target = Path(input('To: ')).expanduser()
+    target = Path(input('To: '))
     sync_folder(source, target)
 
 

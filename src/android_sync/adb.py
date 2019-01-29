@@ -14,8 +14,7 @@ def pull(source_file: Path, target_path: Path) -> None:
 def list_dir(path: Path) -> List[FileRecord]:
     def is_directory(file_name: str) -> bool:
         return file_name[-1] == '/'
-    escaped_path = path.name.replace(' ', r'\ ')
-    print(f"{ADB_PATH} shell 'ls -p {escaped_path}")
+    escaped_path = str(path).replace(' ', r'\ ')
     shell_result = subprocess.run(f"{ADB_PATH} shell 'ls -p {escaped_path}'", shell=True, capture_output=True)
     output: bytes = shell_result.stdout
     if not output:
