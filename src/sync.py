@@ -73,6 +73,13 @@ def sync_by_month() -> None:
         sync_month(month)
 
 
+def clean_folder(device_path: Path) -> None:
+    for file in adb.list_dir(device_path):
+        if file.is_directory:
+            continue
+        adb.remove(file.path)
+
+
 def sync_folder_prompt():
     source = Path(input('From: '))
     target = Path(input('To: '))
