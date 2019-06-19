@@ -16,16 +16,15 @@ def pull(source_file: Path, target_path: Path) -> None:
 
 
 def list_dir(path: Path) -> List[FileRecord]:
-    def is_directory(file_name: str) -> bool:
-        return file_name[-1] == '/'
-
     escaped_path = _escape_path(path)
     shell_result = subprocess.run(f"{ADB_PATH} shell 'ls -p {escaped_path}'", shell=True, capture_output=True)
+    if shell_result.stderr != b'':
+        print(f'ERROR: "{shell_result.stderr.decode()}"')
     output: bytes = shell_result.stdout
     if not output:
         return []
     return [
-        FileRecord(Path(path) / file_name, is_directory(file_name))
+        FileRecord(f'{path}/{file_name}')
         for file_name in output.decode().strip().split('\n')
     ]
 

@@ -5,10 +5,20 @@ from pathlib import Path
 from typing import Iterable
 
 
+# There is no way to distinguish a Path to a directory from a Path to a file.
+# To avoid making a separate call on the phone, we can store this information.
 @dataclass
 class FileRecord:
     path: Path
     is_directory: bool
+
+    def __init__(self, file_name: str):
+        self.path = Path(file_name)
+        self.is_directory = self._is_directory(file_name)
+
+    @staticmethod
+    def _is_directory(file_name: str) -> bool:
+        return file_name[-1] == '/'
 
 
 @dataclass(order=True)
