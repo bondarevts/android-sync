@@ -30,8 +30,9 @@ def list_dir(path: Path) -> List[FileRecord]:
 
 
 def remove(path: Path) -> None:
-    print(f"{ADB_PATH} shell 'rm {_escape_path(path)}'")
-    os.system(f"{ADB_PATH} shell 'rm {_escape_path(path)}'")
+    command = f"{ADB_PATH} shell 'rm {_escape_path(path)}'"
+    print(command)
+    os.system(command)
     notify_file_removal(path)
 
 
