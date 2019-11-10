@@ -31,6 +31,8 @@ def sync_folder(device_path: Path, target_path: Path, is_accepted_file_record: C
             continue
         if file.is_directory:
             sync_folder(file.path, target_path / file.path.name)
+        elif (target_path / file.path.name).exists():
+            print(f'Skipped: {file.path.name}')
         else:
             adb.pull(file.path, target_path)
 
@@ -72,7 +74,7 @@ def sync_folder_prompt():
 
 
 def main() -> None:
-    sync_folder_prompt()
+    sync_month_prompt()
 
 
 if __name__ == "__main__":
