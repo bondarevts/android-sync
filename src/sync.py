@@ -24,7 +24,11 @@ def get_month_target_folder(month: Month) -> Path:
     return Path(TARGET_PATH).expanduser() / str(month.year) / f'{month.month}-{get_month_name(month.month)}'
 
 
-def sync_folder(device_path: Path, target_path: Path, is_accepted_file_record: Callable[[FileRecord], bool] = None):
+def sync_folder(
+        device_path: Path,
+        target_path: Path,
+        is_accepted_file_record: Callable[[FileRecord], bool] = None,
+        *, clean: bool = False):
     target_path.mkdir(exist_ok=True, parents=True)
 
     for file in adb.list_dir(device_path):
@@ -32,10 +36,14 @@ def sync_folder(device_path: Path, target_path: Path, is_accepted_file_record: C
             continue
         if file.is_directory:
             sync_folder(file.path, target_path / file.path.name)
-        elif (target_path / file.path.name).exists():
+            continue
+
+        if (target_path / file.path.name).exists():
             print(f'Skipped: {file.path.name}')
         else:
             adb.pull(file.path, target_path)
+        if clean:
+            adb.remove(file.path)
 
 
 def sync_all() -> None:
@@ -49,9 +57,16 @@ def sync_month_prompt() -> None:
     sync_month(month)
 
 
-def sync_month(month: Month) -> None:
+def sync_and_clean_month_prompt() -> None:
+    period = input("Sync and clean period [year month]:")
+    month = Month(*map(int, period.split()))
+    sync_month(month, clean=True)
+
+
+def sync_month(month: Month, *, clean: bool = False) -> None:
     sync_folder(DEVICE_STORAGE_PATH, get_month_target_folder(month),
-                lambda file_record: belongs_to_month(file_record, month))
+                lambda file_record: belongs_to_month(file_record, month),
+                clean=clean)
 
 
 def sync_by_month() -> None:
