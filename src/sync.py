@@ -15,6 +15,7 @@ def belongs_to_month(file_record: FileRecord, month: Month) -> bool:
         'VID_',
         'Burst_Cover_GIF_Action_',
         'IMG_',
+        'PANO_'
     ))
     return file_record.path.name.startswith(accepted_prefixes)
 
