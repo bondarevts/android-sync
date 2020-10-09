@@ -39,10 +39,6 @@ def main() -> None:
         sync_month(month, clean=args.move)
         return
 
-    if args.command == 'move':
-        sync_month(parse_month(args.month), clean=True)
-        return
-
     if args.command == 'folder':
         sync_folder(args.device_path, args.target_path)
 
