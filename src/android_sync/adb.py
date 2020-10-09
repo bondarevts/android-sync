@@ -50,7 +50,7 @@ def pull(source_file: Path, target_path: Path) -> None:
 
 
 def list_dir(path: Path) -> List[FileRecord]:
-    output = _run_adb_shell('ls', '-p', path, verbose=True)
+    output = _run_adb_shell('ls', '-p', path)
     if not output:
         return []
     return [
