@@ -6,8 +6,8 @@ from android_sync.utils import FileRecord
 from android_sync.utils import Month
 from android_sync.utils import get_month
 from android_sync.utils import get_month_name
-from settings import DEVICE_STORAGE_PATH
-from settings import TARGET_PATH
+from android_sync.settings import DEVICE_STORAGE_PATH
+from android_sync.settings import TARGET_PATH
 
 
 def belongs_to_month(file_record: FileRecord, month: Month) -> bool:

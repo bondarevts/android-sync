@@ -3,8 +3,8 @@ import subprocess
 from pathlib import Path
 from typing import List
 
-from android_sync.utils import FileRecord
-from settings import ADB_PATH
+from .settings import ADB_PATH
+from .utils import FileRecord
 
 
 def _escape_path(path: Path) -> str:
