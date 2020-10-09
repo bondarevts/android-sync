@@ -1,5 +1,7 @@
 import argparse
 
+from android_sync.exceptions import NoDeviceException
+from android_sync.exceptions import UnauthorizedException
 from android_sync.sync import sync_folder
 from android_sync.sync import sync_month
 from android_sync.utils import Month
@@ -26,6 +28,10 @@ def parse_month(value: str) -> Month:
     return Month(year=int(year), month=int(month))
 
 
+def should_retry(answer):
+    return not answer.lower().startswith('n')
+
+
 def main() -> None:
     args = parse_args()
     if args.command == 'all':
@@ -36,8 +42,18 @@ def main() -> None:
             month = Month.current()
         else:
             month = parse_month(args.month)
-        sync_month(month, clean=args.move)
-        return
+
+        answer = ''
+        while should_retry(answer):
+            try:
+                sync_month(month, clean=args.move)
+            except NoDeviceException:
+                answer = input('Device is not found. Please plug in the device.\nRetry [Y/n]? ')
+            except UnauthorizedException:
+                answer = input('Connection is not authorized. Please check the dialog on the device screen. '
+                               'Retry [Y/n]? ')
+            else:
+                answer = 'no'
 
     if args.command == 'folder':
         sync_folder(args.device_path, args.target_path)
