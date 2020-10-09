@@ -1,13 +1,14 @@
+import argparse
 from pathlib import Path
 from typing import Callable
 
 from android_sync import adb
+from android_sync.settings import DEVICE_STORAGE_PATH
+from android_sync.settings import TARGET_PATH
 from android_sync.utils import FileRecord
 from android_sync.utils import Month
 from android_sync.utils import get_month
 from android_sync.utils import get_month_name
-from android_sync.settings import DEVICE_STORAGE_PATH
-from android_sync.settings import TARGET_PATH
 
 
 def belongs_to_month(file_record: FileRecord, month: Month) -> bool:
@@ -51,18 +52,6 @@ def sync_all() -> None:
     sync_folder(DEVICE_STORAGE_PATH, target_path)
 
 
-def sync_month_prompt() -> None:
-    period = input("Sync period [year month]:")
-    month = Month(*map(int, period.split()))
-    sync_month(month)
-
-
-def sync_and_clean_month_prompt() -> None:
-    period = input("Sync and clean period [year month]:")
-    month = Month(*map(int, period.split()))
-    sync_month(month, clean=True)
-
-
 def sync_month(month: Month, *, clean: bool = False) -> None:
     sync_folder(DEVICE_STORAGE_PATH, get_month_target_folder(month),
                 lambda file_record: belongs_to_month(file_record, month),
@@ -83,15 +72,45 @@ def clean_folder(device_path: Path) -> None:
         adb.remove(file.path)
 
 
-def sync_folder_prompt():
-    device_path = Path(input('Enter device path: '))
-    target_path = Path(input('Enter target path: '))
-    sync_folder(device_path, target_path)
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser('async')
+    subparsers = parser.add_subparsers(dest='command')
+
+    subparsers.add_parser('all')
+
+    month_command = subparsers.add_parser('month')
+    month_command.add_argument('month', help='YYYY-MM')
+
+    move_command = subparsers.add_parser('move')
+    move_command.add_argument('month', help='YYYY-MM')
+
+    folder_command = subparsers.add_parser('folder')
+    folder_command.add_argument('device_path')
+    folder_command.add_argument('target_path')
+    return parser.parse_args()
+
+
+def parse_month(value: str) -> Month:
+    year, month = value.split('-')
+    return Month(year=int(year), month=int(month))
 
 
 def main() -> None:
-    sync_month_prompt()
+    args = parse_args()
+    if args.command == 'all':
+        raise Exception('Not implemented yet')
+
+    if args.command == 'month':
+        sync_month(parse_month(args.month))
+        return
+
+    if args.command == 'move':
+        sync_month(parse_month(args.month), clean=True)
+        return
+
+    if args.command == 'folder':
+        sync_folder(args.device_path, args.target_path)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
