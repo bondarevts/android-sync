@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+import datetime
 import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
-
 from typing import Optional
+
 
 # There is no way to distinguish a Path to a directory from a Path to a file.
 # To avoid making a separate call on the phone, we can store this information.
@@ -40,6 +41,11 @@ class Month:
         while current <= end:
             yield current
             current = current.next()
+
+    @staticmethod
+    def current() -> Month:
+        today = datetime.date.today()
+        return Month(today.year, today.month)
 
 
 def get_month_name(month: int) -> str:

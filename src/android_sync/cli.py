@@ -79,7 +79,7 @@ def parse_args() -> argparse.Namespace:
     subparsers.add_parser('all')
 
     month_command = subparsers.add_parser('month')
-    month_command.add_argument('month', help='YYYY-MM')
+    month_command.add_argument('--month', help='YYYY-MM')
 
     move_command = subparsers.add_parser('move')
     move_command.add_argument('month', help='YYYY-MM')
@@ -101,7 +101,11 @@ def main() -> None:
         raise Exception('Not implemented yet')
 
     if args.command == 'month':
-        sync_month(parse_month(args.month))
+        if args.month is None:
+            month = Month.current()
+        else:
+            month = parse_month(args.month)
+        sync_month(month)
         return
 
     if args.command == 'move':
