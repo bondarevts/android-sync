@@ -21,6 +21,8 @@ def _escape_spaces(value: Any) -> str:
 
 
 def _process_error_message(error_message: str) -> None:
+    if not error_message:
+        return
     if error_message.startswith('error: no devices/emulators found'):
         raise NoDeviceException(error_message)
     elif error_message.startswith('error: device unauthorized'):
