@@ -1,20 +1,26 @@
+import contextlib
+import io
+import re
 import subprocess
+import sys
 from pathlib import Path
 from typing import Any
 from typing import List
+from typing import Optional
 
 from .exceptions import NoDeviceException
 from .exceptions import UnauthorizedException
 from .settings import ADB_PATH
 from .utils import FileRecord
 
+_PROGRESS_BLOCK_PATTERN = re.compile(r'\[ *\d+%]')
+
 
 def _escape_spaces(value: Any) -> str:
     return str(value).replace(' ', r'\ ')
 
 
-def _process_error_message(stderr: bytes):
-    error_message = stderr.decode()
+def _process_error_message(error_message: str) -> None:
     if error_message.startswith('error: no devices/emulators found'):
         raise NoDeviceException(error_message)
     elif error_message.startswith('error: device unauthorized'):
@@ -23,21 +29,55 @@ def _process_error_message(stderr: bytes):
         raise Exception(error_message)
 
 
-def _run_adb(*arguments: Any, verbose=False) -> bytes:
+def _run_command(command: List[str], *, verbose: bool = False) -> Optional[str]:
+    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, errors='replace')
+    stream = sys.stdout if verbose else io.StringIO()
+    with contextlib.redirect_stdout(stream):
+        _merge_progress_block(process.stdout)
+    process.wait()
+    _process_error_message(process.stderr.read())
+    return None if verbose else stream.getvalue()
+
+
+def _merge_progress_block(stream):
+    """ Merges lines like
+    [  0%] Text
+    [  1%] Text2
+
+    into one line:
+    [  1%] Text2
+
+    Everything else is passed through unchanged.
+    """
+
+    is_progress_block = False
+    cleanup_width = 1  # 0 doesn't work with format line, 1 will not affect anything
+    for line in iter(stream.readline, ''):
+        line = line.rstrip('\n')
+        if _PROGRESS_BLOCK_PATTERN.match(line):
+            if not is_progress_block:
+                print('\n', end='')
+                is_progress_block = True
+            else:
+                print('\r', end='')
+            print(f'{line:{cleanup_width}}', end='')  # override the previous line with spaces
+            cleanup_width = len(line)
+        else:
+            if is_progress_block:
+                is_progress_block = False
+                print()
+            print(line)
+
+
+def _run_adb(*arguments: Any, verbose=False) -> str:
     command = [ADB_PATH.expanduser(), *arguments]
     if verbose:
         print(command)
 
-    shell_result = subprocess.run(command, capture_output=True)
-    if shell_result.stderr == b'':
-        if verbose:
-            print(shell_result.stdout.decode())
-        return shell_result.stdout
-
-    _process_error_message(shell_result.stderr)
+    return _run_command(command, verbose=verbose)
 
 
-def _run_adb_shell(*arguments: Any, verbose=False) -> bytes:
+def _run_adb_shell(*arguments: Any, verbose=False) -> str:
     shell_arguments = ' '.join([
         _escape_spaces(str(arg))
         for arg in arguments
@@ -55,7 +95,7 @@ def list_dir(path: Path) -> List[FileRecord]:
         return []
     return [
         FileRecord(f'{path}/{file_name}')
-        for file_name in output.decode().strip().split('\n')
+        for file_name in output.strip().split('\n')
     ]
 
 
